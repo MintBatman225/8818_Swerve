@@ -6,6 +6,7 @@ import com.revrobotics.RelativeEncoder;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
@@ -43,11 +44,6 @@ public class SwerveModule extends SubsystemBase{
         driveEncoder = driveMotor.getEncoder();
         turningEncoder = turningMotor.getEncoder();
 
-        driveEncoder.setPositionConversionFactor(ModuleConstants.kDriveEncoderRot2Meter);
-        driveEncoder.setVelocityConversionFactor(ModuleConstants.kDriveEncoderRPM2MeterPerSec);
-        turningEncoder.setPositionConversionFactor(ModuleConstants.kTurningEncoderRot2Rad);
-        turningEncoder.setVelocityConversionFactor(ModuleConstants.kTurningEncoderRPM2RadPerSec);
-
         turningPidController.enableContinuousInput(-Math.PI, Math.PI);
 
         resetEncoders();
@@ -76,10 +72,16 @@ public class SwerveModule extends SubsystemBase{
         return angle * (absoluteEncoderReversed ? -1.0 : 1.0);
     }
 
+    public SwerveModulePosition getPosition(){
+        return new SwerveModulePosition(getDrivePosition(),new Rotation2d(getTurningPosition()));
+    }
+
     public void resetEncoders() {
         driveEncoder.setPosition(0);
-        turningEncoder.setPosition(getAbsoluteEncoderRad());
+        turningEncoder.setPosition(getAbsoluteEncoderRad()/ModuleConstants.kTurningEncoderRot2Rad);
     }
+
+
 
     public SwerveModuleState getState() {
         return new SwerveModuleState(getDriveVelocity(), new Rotation2d(getTurningPosition()));
@@ -99,5 +101,9 @@ public class SwerveModule extends SubsystemBase{
     public void stop() {
         driveMotor.set(0);
         turningMotor.set(0);
+    }
+
+    @Override
+    public void periodic(){
     }
 }
